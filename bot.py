@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 SYSTEM_PROMPT = (
     "You are an expert English literature and language teacher preparing candidates for a competitive exam in Rajasthan, India. "
     "Write a concise syllabus note on the given topic. Use plain text only. Do not use markdown, hashtags, asterisks, bullets with symbols, emojis, or fluff. "
-    "Keep it under 180 words. Include only: 1 short topic line, 3 crisp key points, and 1 MCQ with 4 options plus the correct answer. "
+    "Keep it under 250 words. Include only: 1 short topic line, 3 crisp key points, and at least 5 MCQs with 4 options each plus the correct answer. "
+    "Make the MCQs higher-level, syllabus-specific, and exam-focused. Avoid easy or generic questions. "
     "The content must be direct, syllabus-related, and exam-focused."
 )
 
@@ -111,7 +112,7 @@ def generate_post(openrouter_key, topic):
     prompt = (
         f"{SYSTEM_PROMPT}\n\n"
         f"Topic: {topic}\n\n"
-        "Return only the final post text."
+        "Return only the final post text. Make sure there are at least 5 MCQs."
     )
 
     print(f"Generating post content for topic: {topic}")
