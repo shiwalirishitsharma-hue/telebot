@@ -16,7 +16,7 @@ SYSTEM_PROMPT = (
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL_CANDIDATES = [
-    "openrouter/free",
+    "mistralai/mistral-small-2603",
     "openai/gpt-oss-120b:free",
     "google/gemma-3-4b-it:free",
 ]
