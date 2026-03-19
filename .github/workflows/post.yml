@@ -1,6 +1,11 @@
 name: Post Exam Prep to Telegram Channel
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - topic_index.txt
   workflow_dispatch: {}
   schedule:
     - cron: "30 2 * * *" # 02:30 UTC -> 08:00 IST
