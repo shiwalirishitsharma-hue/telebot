@@ -76,16 +76,19 @@ def write_index(index, index_path="topic_index.txt"):
 
 
 def generate_post(openrouter_key, topic):
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Prepare the post on: {topic}"},
-    ]
+    prompt = (
+        f"{SYSTEM_PROMPT}\n\n"
+        f"Topic: {topic}\n\n"
+        "Write the post now."
+    )
 
     print(f"Generating post content for topic: {topic}")
 
     payload = {
         "model": MODEL,
-        "messages": messages,
+        "messages": [
+            {"role": "user", "content": prompt},
+        ],
         "temperature": 0.7,
         "max_tokens": 650,
     }
