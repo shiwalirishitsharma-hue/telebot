@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 
 SYSTEM_PROMPT = (
     "You are an expert English literature and language teacher preparing candidates for a competitive exam in Rajasthan, India. "
-    "Create a focused Telegram post (max 300 words) on the given topic. Include: key concept explanation, 2 important exam-oriented points, "
-    "1 MCQ with 4 options and the correct answer highlighted. Use emojis for visual appeal. Write in clear English accessible to graduate-level students."
+    "Write a concise syllabus note on the given topic. Use plain text only. Do not use markdown, hashtags, asterisks, bullets with symbols, emojis, or fluff. "
+    "Keep it under 180 words. Include only: 1 short topic line, 3 crisp key points, and 1 MCQ with 4 options plus the correct answer. "
+    "The content must be direct, syllabus-related, and exam-focused."
 )
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
@@ -75,11 +76,42 @@ def write_index(index, index_path="topic_index.txt"):
         f.write(str(index))
 
 
+def sanitize_post_text(text):
+    cleaned_lines = []
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            cleaned_lines.append("")
+            continue
+
+        if line.startswith("```"):
+            continue
+
+        while line.startswith("#"):
+            line = line[1:].lstrip()
+
+        if line.startswith(("- ", "* ")):
+            line = line[2:].lstrip()
+
+        line = line.replace("**", "").replace("__", "").replace("`", "")
+        line = line.replace("*", "")
+
+        if line:
+            cleaned_lines.append(line)
+
+    cleaned_text = "\n".join(cleaned_lines)
+    while "\n\n\n" in cleaned_text:
+        cleaned_text = cleaned_text.replace("\n\n\n", "\n\n")
+
+    return cleaned_text.strip()
+
+
 def generate_post(openrouter_key, topic):
     prompt = (
         f"{SYSTEM_PROMPT}\n\n"
         f"Topic: {topic}\n\n"
-        "Write the post now."
+        "Return only the final post text."
     )
 
     print(f"Generating post content for topic: {topic}")
@@ -89,8 +121,8 @@ def generate_post(openrouter_key, topic):
         "messages": [
             {"role": "user", "content": prompt},
         ],
-        "temperature": 0.7,
-        "max_tokens": 650,
+        "temperature": 0.4,
+        "max_tokens": 400,
     }
     headers = dict(OPENROUTER_HEADERS)
     headers["Authorization"] = f"Bearer {openrouter_key}"
@@ -114,7 +146,7 @@ def generate_post(openrouter_key, topic):
         raise RuntimeError(f"OpenRouter response missing content: {data}")
 
     print("Generation successful.")
-    return text.strip()
+    return sanitize_post_text(text)
 
 
 def post_to_telegram(bot_token, channel_id, text):
