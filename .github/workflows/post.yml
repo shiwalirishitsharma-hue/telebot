@@ -1,0 +1,48 @@
+name: Post Exam Prep to Telegram Channel
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 2 * * *" # 02:30 UTC -> 08:00 IST
+    - cron: "30 7 * * *" # 07:30 UTC -> 13:00 IST
+    - cron: "30 13 * * *" # 13:30 UTC -> 19:00 IST
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Run bot once
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: python bot.py --once
+
+      - name: Commit updated index if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- topic_index.txt; then
+            git add topic_index.txt
+            git commit -m "Update topic_index after scheduled post"
+            git push
+          else
+            echo "No topic_index changes to commit."
+          fi

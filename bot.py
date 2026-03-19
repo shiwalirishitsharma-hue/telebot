@@ -3,7 +3,6 @@ import json
 import os
 import sys
 
-import openai
 import requests
 from dotenv import load_dotenv
 
@@ -16,6 +15,11 @@ SYSTEM_PROMPT = (
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL = "google/gemma-3-27b-it:free"
 TELEGRAM_API_BASE = "https://api.telegram.org"
+OPENROUTER_HEADERS = {
+    "Content-Type": "application/json",
+    "HTTP-Referer": "https://litgram.app",
+    "X-Title": "LitGram Telegram Bot",
+}
 
 
 def load_env_vars():
@@ -72,9 +76,6 @@ def write_index(index, index_path="topic_index.txt"):
 
 
 def generate_post(openrouter_key, topic):
-    openai.api_key = openrouter_key
-    openai.api_base = OPENROUTER_BASE_URL
-
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": f"Prepare the post on: {topic}"},
@@ -82,22 +83,32 @@ def generate_post(openrouter_key, topic):
 
     print(f"Generating post content for topic: {topic}")
 
-    response = openai.ChatCompletion.create(
-        model=MODEL,
-        messages=messages,
-        temperature=0.7,
-        max_tokens=650,
-        # headers param is accepted by openai >=1.0; if not, this may still work via openai.request_headers
-        headers={"Referer": "https://litgram.app"},
-    )
+    payload = {
+        "model": MODEL,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 650,
+    }
+    headers = dict(OPENROUTER_HEADERS)
+    headers["Authorization"] = f"Bearer {openrouter_key}"
 
-    choices = response.get("choices")
+    response = requests.post(
+        f"{OPENROUTER_BASE_URL}/chat/completions",
+        json=payload,
+        headers=headers,
+        timeout=60,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(f"OpenRouter API error: {response.status_code} - {response.text}")
+
+    data = response.json()
+    choices = data.get("choices") or []
     if not choices:
-        raise RuntimeError("OpenRouter returned no choices")
+        raise RuntimeError(f"OpenRouter returned no choices: {data}")
 
     text = choices[0].get("message", {}).get("content")
     if not text:
-        raise RuntimeError("OpenRouter response missing content")
+        raise RuntimeError(f"OpenRouter response missing content: {data}")
 
     print("Generation successful.")
     return text.strip()
@@ -108,7 +119,6 @@ def post_to_telegram(bot_token, channel_id, text):
     payload = {
         "chat_id": channel_id,
         "text": text,
-        "parse_mode": "Markdown",
     }
 
     print(f"Sending post to Telegram channel: {channel_id}")

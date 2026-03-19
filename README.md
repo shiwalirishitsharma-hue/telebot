@@ -1,6 +1,6 @@
 # Telegram Exam Prep Channel Bot
 
-A lightweight scheduled Telegram channel bot that uses OpenRouter + OpenAI-compatible API to generate short exam-prep posts from a syllabus and publish them automatically.
+A lightweight scheduled Telegram channel bot that uses OpenRouter to generate short exam-prep posts from a syllabus and publish them automatically.
 
 ## Project Structure
 
@@ -64,8 +64,8 @@ It runs `python bot.py --once` and commits `topic_index.txt` if changed.
 - Loads env from `.env`.
 - Loads and flattens all topics from `syllabus.json`.
 - Picks topic at current index (mod length).
-- Generates message via OpenRouter ChatCompletion.
-- Sends Markdown message to Telegram channel.
+- Generates message via the OpenRouter chat completions API.
+- Sends plain text to Telegram channel.
 - Increments and writes next index to `topic_index.txt`.
 
 ## Notes
