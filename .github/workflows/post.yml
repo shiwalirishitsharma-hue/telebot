@@ -9,8 +9,10 @@ on:
   workflow_dispatch: {}
   schedule:
     - cron: "30 2 * * *" # 02:30 UTC -> 08:00 IST
-    - cron: "30 7 * * *" # 07:30 UTC -> 13:00 IST
-    - cron: "30 13 * * *" # 13:30 UTC -> 19:00 IST
+    - cron: "30 5 * * *" # 05:30 UTC -> 11:00 IST
+    - cron: "30 8 * * *" # 08:30 UTC -> 14:00 IST
+    - cron: "30 11 * * *" # 11:30 UTC -> 17:00 IST
+    - cron: "30 16 * * *" # 16:30 UTC -> 22:00 IST
 
 permissions:
   contents: write
