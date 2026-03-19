@@ -15,7 +15,11 @@ SYSTEM_PROMPT = (
 )
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-MODEL = "google/gemma-3-27b-it:free"
+MODEL_CANDIDATES = [
+    "openrouter/free",
+    "openai/gpt-oss-120b:free",
+    "google/gemma-3-4b-it:free",
+]
 TELEGRAM_API_BASE = "https://api.telegram.org"
 OPENROUTER_HEADERS = {
     "Content-Type": "application/json",
@@ -108,7 +112,7 @@ def sanitize_post_text(text):
     return cleaned_text.strip()
 
 
-def generate_post(openrouter_key, topic):
+def generate_post_with_model(openrouter_key, topic, model):
     prompt = (
         f"{SYSTEM_PROMPT}\n\n"
         f"Topic: {topic}\n\n"
@@ -118,7 +122,7 @@ def generate_post(openrouter_key, topic):
     print(f"Generating post content for topic: {topic}")
 
     payload = {
-        "model": MODEL,
+        "model": model,
         "messages": [
             {"role": "user", "content": prompt},
         ],
@@ -148,6 +152,24 @@ def generate_post(openrouter_key, topic):
 
     print("Generation successful.")
     return sanitize_post_text(text)
+
+
+def generate_post(openrouter_key, topic):
+    last_error = None
+
+    for model in MODEL_CANDIDATES:
+        print(f"Trying model: {model}")
+        try:
+            return generate_post_with_model(openrouter_key, topic, model)
+        except RuntimeError as exc:
+            message = str(exc)
+            last_error = exc
+            if " 429 -" in message or '"code":429' in message:
+                print(f"Model rate-limited: {model}")
+                continue
+            raise
+
+    raise RuntimeError(f"All OpenRouter model attempts were rate-limited: {last_error}")
 
 
 def post_to_telegram(bot_token, channel_id, text):
